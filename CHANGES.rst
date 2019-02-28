@@ -26,6 +26,10 @@ Changelog
 
 - Retry on POSKeyError when using celery
 
+- #2610885: Sleep for a few seconds in index task because retry isn't working
+  with collective.celery tasks.
+  [JL 2019-02-28]
+
 
 1.0a1 (git tag)
 ---------------

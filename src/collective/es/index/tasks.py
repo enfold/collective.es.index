@@ -6,6 +6,8 @@ from elasticsearch.exceptions import NotFoundError
 from zope.component import queryUtility
 from zope.component.hooks import getSite
 
+import time
+
 try:
    from Products.CMFCore.interfaces import IIndexQueueProcessor
 except ImportError:
@@ -23,7 +25,9 @@ def extra_config(startup):
         es_servers[0].create()
 
 
-@task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
+# XXX go back to using autoretry when retry is fixed in collective.celery
+# @task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
+@task(name='indexer')
 def index_content(path):
     logger.warning('Indexing {}'.format(path))
     es = get_ingest_client()
@@ -34,6 +38,8 @@ def index_content(path):
     obj = site.unrestrictedTraverse(path)
     indexer = queryUtility(IIndexQueueProcessor, name='collective.es.index')
     data = indexer.get_payload(obj)
+    # XXX remove sleep when retry is fixed in collective.celery
+    time.sleep(10)
     try:
         es.index(**data)
     except Exception:

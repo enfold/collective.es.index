@@ -37,9 +37,9 @@ def index_content(path):
     site = getSite()
     obj = site.unrestrictedTraverse(path)
     indexer = queryUtility(IIndexQueueProcessor, name='collective.es.index')
-    data = indexer.get_payload(obj)
     # XXX remove sleep when retry is fixed in collective.celery
     time.sleep(10)
+    data = indexer.get_payload(obj)
     try:
         es.index(**data)
     except Exception:

@@ -30,6 +30,9 @@ Changelog
   with collective.celery tasks.
   [JL 2019-02-28]
 
+- #2610885: Move sleep to before call to get_payload.
+  [JL 2019-02-28]
+
 
 1.0a1 (git tag)
 ---------------

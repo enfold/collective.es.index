@@ -45,6 +45,9 @@ Changelog
 - Don't swallow exceptions in the celery task.
   [JL 2019-03-04]
 
+- #2610885: Remove sleep and restore retry on POSKeyError
+  [JL 2019-03-04]
+
 
 1.0a1 (git tag)
 ---------------

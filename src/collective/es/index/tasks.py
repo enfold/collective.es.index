@@ -25,9 +25,7 @@ def extra_config(startup):
         es_servers[0].create()
 
 
-# XXX go back to using autoretry when retry is fixed in collective.celery
-# @task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
-@task(name='indexer')
+@task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
 def index_content(path, url):
     logger.warning('Indexing {}'.format(path))
     es = get_ingest_client()
@@ -37,8 +35,6 @@ def index_content(path, url):
     site = getSite()
     obj = site.unrestrictedTraverse(path)
     indexer = queryUtility(IIndexQueueProcessor, name='collective.es.index')
-    # XXX remove sleep when retry is fixed in collective.celery
-    time.sleep(10)
     data = indexer.get_payload(obj)
     data['body']['@id'] = url
     es.index(**data)

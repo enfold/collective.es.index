@@ -40,7 +40,7 @@ def index_content(path, url):
     # XXX remove sleep when retry is fixed in collective.celery
     time.sleep(10)
     data = indexer.get_payload(obj)
-    data['@id'] = url
+    data['body']['@id'] = url
     try:
         es.index(**data)
     except Exception:

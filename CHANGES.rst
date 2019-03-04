@@ -33,6 +33,9 @@ Changelog
 - #2610885: Move sleep to before call to get_payload.
   [JL 2019-02-28]
 
+- Support indexing blob fields on Archetypes based content types.
+  [JL 2019-03-04]
+
 
 1.0a1 (git tag)
 ---------------

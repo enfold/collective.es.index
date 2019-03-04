@@ -12,6 +12,7 @@ from collective.es.index.tasks import unindex_content
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.exceptions import TransportError
 from plone import api
+from plone.app.blob.interfaces import IBlobWrapper
 from plone.app.textfield.interfaces import IRichTextValue
 from plone.memoize import ram
 from plone.namedfile.interfaces import IBlobby
@@ -29,6 +30,7 @@ import uuid
 
 try:
     from Products.Archetypes.interfaces import IBaseContent
+    from Products.Archetypes.interfaces import ITextField
     HAS_ARCHETYPES = True
 except ImportError:
     HAS_ARCHETYPES = False
@@ -196,22 +198,41 @@ class ElasticSearchIndexQueueProcessor(object):
 
     def _expand_binary_data(self, obj, data):
         max_size = es_config.max_blobsize
+        is_archetype = False
+        if HAS_ARCHETYPES and IBaseContent.providedBy(obj):
+            is_archetype = True
+            schema = obj.Schema()
         for fieldname in self._iterate_binary_fields(obj, data):
             if fieldname not in data:
                 data[fieldname] = None
                 continue
-            field = getattr(obj, fieldname, None)
-            if field is None:
-                data[fieldname] = None
-                continue
-            data[fieldname + '_meta'] = data[fieldname]
-            if IBlobby.providedBy(field):
-                with field.open() as fh:
-                    data[fieldname] = base64.b64encode(fh.read())
-            elif IRichTextValue.providedBy(field):
-                data[fieldname] = base64.b64encode(
-                    data[fieldname + '_meta']['data'].encode('utf8'),
-                )
+            if is_archetype:
+                field = schema[fieldname]
+                value = field.get(obj)
+                if value is None:
+                    data[fieldname] = None
+                    continue
+                data[fieldname + '_meta'] = data[fieldname]
+                if IBlobWrapper.providedBy(value):
+                    with value.getBlob().open() as fh:
+                        data[fieldname] = base64.b64encode(fh.read())
+                elif ITextField.providedBy(field):
+                    data[fieldname] = base64.b64encode(
+                        data[fieldname + '_meta']['data'].encode('utf8')
+                    )
+            else:
+                field = getattr(obj, fieldname, None)
+                if field is None:
+                    data[fieldname] = None
+                    continue
+                data[fieldname + '_meta'] = data[fieldname]
+                if IBlobby.providedBy(field):
+                    with field.open() as fh:
+                        data[fieldname] = base64.b64encode(fh.read())
+                elif IRichTextValue.providedBy(field):
+                    data[fieldname] = base64.b64encode(
+                        data[fieldname + '_meta']['data'].encode('utf8'),
+                    )
             if max_size and len(data[fieldname]) > max_size:
                 data[fieldname] = None
                 del data[fieldname + '_meta']
@@ -289,7 +310,7 @@ class ElasticSearchIndexQueueProcessor(object):
             self._check_and_add_portal_to_index(portal)
         if es_config.use_celery:
             path = '/'.join([p for p in obj.getPhysicalPath() if p != ''])
-            index_content.delay(path)
+            index_content.delay(path, obj.absolute_url())
         else:
             es_kwargs = self.get_payload(obj)
             try:

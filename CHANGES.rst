@@ -36,6 +36,9 @@ Changelog
 - Support indexing blob fields on Archetypes based content types.
   [JL 2019-03-04]
 
+- Pass the object url to the task.
+  [JL 2019-03-04]
+
 
 1.0a1 (git tag)
 ---------------

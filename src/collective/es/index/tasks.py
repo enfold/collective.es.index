@@ -28,7 +28,7 @@ def extra_config(startup):
 # XXX go back to using autoretry when retry is fixed in collective.celery
 # @task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
 @task(name='indexer')
-def index_content(path):
+def index_content(path, url):
     logger.warning('Indexing {}'.format(path))
     es = get_ingest_client()
     if es is None:
@@ -40,6 +40,7 @@ def index_content(path):
     # XXX remove sleep when retry is fixed in collective.celery
     time.sleep(10)
     data = indexer.get_payload(obj)
+    data['@id'] = url
     try:
         es.index(**data)
     except Exception:

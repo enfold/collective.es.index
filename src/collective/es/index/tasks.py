@@ -41,14 +41,7 @@ def index_content(path, url):
     time.sleep(10)
     data = indexer.get_payload(obj)
     data['body']['@id'] = url
-    try:
-        es.index(**data)
-    except Exception:
-        logger.exception(
-            'indexing of {0} failed.'.format(
-                path,
-            ),
-        )
+    es.index(**data)
 
 
 @task(name='unindexer')

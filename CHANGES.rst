@@ -39,6 +39,9 @@ Changelog
 - Pass the object url to the task.
   [JL 2019-03-04]
 
+- Add control panel and allow user to configure the index name.
+  [JL 2019-03-04]
+
 
 1.0a1 (git tag)
 ---------------

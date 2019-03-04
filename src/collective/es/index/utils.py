@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from .interfaces import ICollectiveESIndexSettings
 from collective.es.index.interfaces import IElasticSearchClient
 from plone import api
 from plone.api.exc import CannotGetPortalError
+from plone.registry.interfaces import IRegistry
 from zope.component import queryUtility
 
 import threading
@@ -48,12 +50,20 @@ def remove_index(index=INDEX):
 
 def index_name():
     try:
-        portal = api.portal.get()
-        name = 'plone_{0}'.format(portal.getId()).lower()
-    except CannotGetPortalError:
-        # portal is being unindexed
-        name = None
-    return name
+        registry = queryUtility(IRegistry)
+        settings = registry.forInterface(ICollectiveESIndexSettings)
+    except KeyError:
+        return None
+    if settings.index_name:
+        return settings.index_name
+    else:
+        try:
+            portal = api.portal.get()
+            name = 'plone_{0}'.format(portal.getId()).lower()
+        except CannotGetPortalError:
+            # portal is being unindexed
+            name = None
+        return name
 
 
 class _QueryBlocker(object):

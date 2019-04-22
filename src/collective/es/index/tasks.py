@@ -3,6 +3,7 @@ from celery.utils.log import get_task_logger
 from collective.celery import task
 from collective.es.index.utils import get_ingest_client
 from elasticsearch.exceptions import NotFoundError
+from elasticsearch.exceptions import TransportError
 from zope.component import queryUtility
 from zope.component.hooks import getSite
 
@@ -25,7 +26,8 @@ def extra_config(startup):
         es_servers[0].create()
 
 
-@task(name='indexer', autoretry_for=(POSKeyError,), retry_backoff=5)
+@task(name='indexer', autoretry_for=(POSKeyError, TransportError,),
+      retry_backoff=5)
 def index_content(path, url):
     logger.warning('Indexing {}'.format(path))
     es = get_ingest_client()

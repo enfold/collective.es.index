@@ -48,6 +48,9 @@ Changelog
 - #2610885: Remove sleep and restore retry on POSKeyError
   [JL 2019-03-04]
 
+- #2698336: Retry index on TransportError.
+  [JL 2019-04-22]
+
 
 1.0a1 (git tag)
 ---------------

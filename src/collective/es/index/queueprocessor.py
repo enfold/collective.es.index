@@ -214,6 +214,17 @@ class ElasticSearchIndexQueueProcessor(object):
                     continue
                 data[fieldname + '_meta'] = data[fieldname]
                 if IBlobWrapper.providedBy(value):
+                    if max_size and value.get_size() > max_size:
+                        data[fieldname] = None
+                        del data[fieldname + '_meta']
+                        msg = 'File too big for ElasticSearch Indexing: {0}'
+                        logger.info(
+                            msg.format(
+                                obj.absolute_url(),
+                            ),
+                        )
+                        continue
+
                     with value.getBlob().open() as fh:
                         data[fieldname] = base64.b64encode(fh.read())
                 elif ITextField.providedBy(field):
@@ -227,6 +238,16 @@ class ElasticSearchIndexQueueProcessor(object):
                     continue
                 data[fieldname + '_meta'] = data[fieldname]
                 if IBlobby.providedBy(field):
+                    if max_size and field.getSize() > max_size:
+                        data[fieldname] = None
+                        del data[fieldname + '_meta']
+                        msg = 'File too big for ElasticSearch Indexing: {0}'
+                        logger.info(
+                            msg.format(
+                                obj.absolute_url(),
+                            ),
+                        )
+                        continue
                     with field.open() as fh:
                         data[fieldname] = base64.b64encode(fh.read())
                 elif IRichTextValue.providedBy(field):

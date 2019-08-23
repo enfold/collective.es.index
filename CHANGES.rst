@@ -51,6 +51,9 @@ Changelog
 - #2698336: Retry index on TransportError.
   [JL 2019-04-22]
 
+- Check blob sizes before extracting the blob data.
+  [JL 2019-08-23]
+
 
 1.0a1 (git tag)
 ---------------

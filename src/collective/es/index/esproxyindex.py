@@ -163,13 +163,15 @@ class ElasticSearchProxyIndex(SimpleItem):
         search = Search(using=es, index=index_name())
         search = search.params(request_timeout=timeout,
                                size=BATCH_SIZE,
-                               preserve_order=True,
+                               track_scores=True
                                )
+        search = search.sort('rid', '_id')
         search = search.source(include='rid')
         query_string = record.keys[0].decode('utf8')
-        if query_string and query_string.startswith('*'):
-            # plone.app.querystring contains op sends a leading *, remove it
-            query_string = query_string[1:]
+        logger.info(query_string)
+        if '*' in query_string:
+            query_string = query_string.replace('*', ' ')
+        query_string = query_string.strip()
         search = search.query('simple_query_string',
                               query=query_string,
                               fields=search_fields
@@ -182,30 +184,39 @@ class ElasticSearchProxyIndex(SimpleItem):
                 continue
             search = search.highlight(name, fragment_size=FRAGMENT_SIZE)
 
-        try:
-            result = search.scan()
-        except TransportError:
-            # No es client, return empty results
-            logger.exception('ElasticSearch client not available.')
-            return IIBTree(), (self.id,)
         # initial return value, other batches to be applied
-
         retval = IIBTree()
         highlights = OOBTree()
-        for r in result:
-            if getattr(r, 'rid', None) is None:
-                # something was indexed with no rid. Ignore for now.
-                # this is only for highlights, so no big deal if we
-                # skip one
-                continue
-            retval[r.rid] = int(10000 * float(r.meta.score))
-            # Index query returns only rids, so we need
-            # to save highlights for later use
-            highlight_list = []
-            if getattr(r.meta, 'highlight', None) is not None:
-                for key in dir(r.meta.highlight):
-                    highlight_list.extend(r.meta.highlight[key])
-            highlights[r.meta.id] = highlight_list
+        last_seen = None
+        done = False
+        while not done:
+            if last_seen is not None:
+                search = search.update_from_dict({'search_after': last_seen})
+            try:
+                results = search.execute(ignore_cache=True)
+            except TransportError:
+                # No es client, return empty results
+                logger.exception('ElasticSearch client not available.')
+                return IIBTree(), (self.id,)
+
+            for r in results:
+                if getattr(r, 'rid', None) is None:
+                    # something was indexed with no rid. Ignore for now.
+                    # this is only for highlights, so no big deal if we
+                    # skip one
+                    continue
+                retval[r.rid] = int(10000 * float(r.meta.score))
+                # Index query returns only rids, so we need
+                # to save highlights for later use
+                highlight_list = []
+                if getattr(r.meta, 'highlight', None) is not None:
+                    for key in dir(r.meta.highlight):
+                        highlight_list.extend(r.meta.highlight[key])
+                highlights[r.meta.id] = highlight_list
+                last_seen = [r.rid, r.meta.id]
+
+            if not results:
+                done = True
 
         # store highlights
         try:

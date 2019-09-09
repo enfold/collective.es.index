@@ -54,6 +54,9 @@ Changelog
 - Check blob sizes before extracting the blob data.
   [JL 2019-08-23]
 
+- #2906253: Don't use scroll.
+  [JL 2019-09-09]
+
 
 1.0a1 (git tag)
 ---------------

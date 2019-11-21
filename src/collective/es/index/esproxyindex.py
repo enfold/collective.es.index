@@ -154,6 +154,7 @@ class ElasticSearchProxyIndex(SimpleItem):
         if not search_fields:
             search_fields = SEARCH_FIELDS
         search_fields = search_fields.split()
+        logger.info(search_fields)
         if query_blocker.blocked:
             return
         record = parseIndexRequest(request, self.id)
@@ -161,10 +162,7 @@ class ElasticSearchProxyIndex(SimpleItem):
             return None
         es = get_query_client()
         search = Search(using=es, index=index_name())
-        search = search.params(request_timeout=timeout,
-                               size=BATCH_SIZE,
-                               track_scores=True
-                               )
+        search = search.params(request_timeout=timeout)
         search = search.sort('rid', '_id')
         search = search.source(include='rid')
         query_string = record.keys[0].decode('utf8')
@@ -176,6 +174,11 @@ class ElasticSearchProxyIndex(SimpleItem):
                               query=query_string,
                               fields=search_fields
                               )
+        results_count = search.count()
+        search = search.params(request_timeout=timeout,
+                               size=BATCH_SIZE,
+                               track_scores=True
+                               )
         # setup highlighting
         for field in search_fields:
             name = field.split('^')[0]
@@ -188,8 +191,11 @@ class ElasticSearchProxyIndex(SimpleItem):
         retval = IIBTree()
         highlights = OOBTree()
         last_seen = None
-        done = False
-        while not done:
+        count = 0
+        batch_count = results_count / BATCH_SIZE
+        if results_count % BATCH_SIZE != 0:
+            batch_count = batch_count + 1
+        for i in xrange(batch_count):
             if last_seen is not None:
                 search = search.update_from_dict({'search_after': last_seen})
             try:
@@ -200,23 +206,18 @@ class ElasticSearchProxyIndex(SimpleItem):
                 return IIBTree(), (self.id,)
 
             for r in results:
-                if getattr(r, 'rid', None) is None:
-                    # something was indexed with no rid. Ignore for now.
-                    # this is only for highlights, so no big deal if we
-                    # skip one
-                    continue
-                retval[r.rid] = int(10000 * float(r.meta.score))
-                # Index query returns only rids, so we need
-                # to save highlights for later use
-                highlight_list = []
-                if getattr(r.meta, 'highlight', None) is not None:
-                    for key in dir(r.meta.highlight):
-                        highlight_list.extend(r.meta.highlight[key])
-                highlights[r.meta.id] = highlight_list
-                last_seen = [r.rid, r.meta.id]
-
-            if not results:
-                done = True
+                rid = getattr(r, 'rid', None)
+                if rid is not None:
+                    retval[rid] = int(10000 * float(r.meta.score))
+                    # Index query returns only rids, so we need
+                    # to save highlights for later use
+                    highlight_list = []
+                    if getattr(r.meta, 'highlight', None) is not None:
+                        for key in dir(r.meta.highlight):
+                            highlight_list.extend(r.meta.highlight[key])
+                    highlights[r.meta.id] = highlight_list
+                last_seen = [rid, r.meta.id]
+                count = count + 1
 
         # store highlights
         try:

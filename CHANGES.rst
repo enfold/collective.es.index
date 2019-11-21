@@ -57,6 +57,9 @@ Changelog
 - #2906253: Don't use scroll.
   [JL 2019-09-09]
 
+- #3051653: Fix search infinite loop.
+  [JL 2019-11-21]
+
 
 1.0a1 (git tag)
 ---------------

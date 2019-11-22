@@ -60,6 +60,9 @@ Changelog
 - #3051653: Fix search infinite loop.
   [JL 2019-11-21]
 
+- #2972719: Don't send query attribute to elasticsearch
+  [JL 2019-11-22]
+
 
 1.0a1 (git tag)
 ---------------

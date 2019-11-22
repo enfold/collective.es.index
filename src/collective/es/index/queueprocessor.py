@@ -50,6 +50,7 @@ KEYS_TO_REMOVE = [
     'items_total',
     'parent',
     '@components',
+    'query',
 ]
 
 AT_SIMPLE_TEXT_FIELDS = [

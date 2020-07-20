@@ -57,6 +57,9 @@ def index_name():
     if settings.index_name:
         return settings.index_name
     else:
+        config = get_configuration()
+        if config.index_name:
+            return config.index_name
         try:
             portal = api.portal.get()
             name = 'plone_{0}'.format(portal.getId()).lower()

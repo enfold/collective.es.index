@@ -71,6 +71,11 @@
       Facets for faceted search page.
       </description>
     </key>
+    <key name="index_name" datatype="string" default="">
+      <description>
+        ElasticSearch index name
+      </description>
+    </key>
   </sectiontype>
 
 </component>

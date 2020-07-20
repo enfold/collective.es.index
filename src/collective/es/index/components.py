@@ -29,6 +29,7 @@ class ElasticSearchIngressConfFactory(object):
         self.indexed_chars = self.section.indexed_chars
         self.search_fields = self.section.search_fields
         self.facets = self.section.facets
+        self.index_name = self.section.index_name
 
     def create(self):
         base_client = Elasticsearch(

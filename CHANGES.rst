@@ -63,6 +63,9 @@ Changelog
 - #2972719: Don't send query attribute to elasticsearch
   [JL 2019-11-22]
 
+- Don't index an item if the index name hasn't been configured yet.
+  [JL 2020-07-20]
+
 
 1.0a1 (git tag)
 ---------------

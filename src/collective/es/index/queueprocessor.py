@@ -141,7 +141,8 @@ class ElasticSearchIndexQueueProcessor(object):
                 mapping = es.indices.get_mapping(index=index_name())
             else:
                 raise
-        setattr(request, CACHE_ATTRIBUTE, mapping)
+        if request is not None:
+            setattr(request, CACHE_ATTRIBUTE, mapping)
         return mapping
 
     def _setup_mapping(self, es):
@@ -307,6 +308,10 @@ class ElasticSearchIndexQueueProcessor(object):
         return es_kwargs
 
     def index(self, obj, attributes=None):
+        index = index_name()
+        if index is None:
+            # Not configured yet.
+            return
         query_blocker.block()
         es = get_ingest_client()
         if es is None:

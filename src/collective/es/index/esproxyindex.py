@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from AccessControl import ClassSecurityInfo
+from App.class_init import InitializeClass
 from BTrees.IIBTree import IIBTree
 from BTrees.OOBTree import OOBTree
 from collective.es.index.utils import get_configuration
@@ -8,7 +9,6 @@ from collective.es.index.utils import index_name
 from collective.es.index.utils import query_blocker
 from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
-from Globals import InitializeClass
 from OFS.SimpleItem import SimpleItem
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from Products.PluginIndexes.common.util import parseIndexRequest

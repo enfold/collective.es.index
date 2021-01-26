@@ -12,7 +12,6 @@ from collective.es.index.tasks import unindex_content
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch.exceptions import TransportError
 from plone import api
-from plone.app.blob.interfaces import IBlobWrapper
 from plone.app.textfield.interfaces import IRichTextValue
 from plone.memoize import ram
 from plone.namedfile.interfaces import IBlobby
@@ -200,62 +199,32 @@ class ElasticSearchIndexQueueProcessor(object):
 
     def _expand_binary_data(self, obj, data):
         max_size = es_config.max_blobsize
-        is_archetype = False
-        if HAS_ARCHETYPES and IBaseContent.providedBy(obj):
-            is_archetype = True
-            schema = obj.Schema()
         for fieldname in self._iterate_binary_fields(obj, data):
             if fieldname not in data:
                 data[fieldname] = None
                 continue
-            if is_archetype:
-                field = schema[fieldname]
-                value = field.get(obj)
-                if value is None:
+            field = getattr(obj, fieldname, None)
+            if field is None:
+                data[fieldname] = None
+                continue
+            data[fieldname + '_meta'] = data[fieldname]
+            if IBlobby.providedBy(field):
+                if max_size and field.getSize() > max_size:
                     data[fieldname] = None
-                    continue
-                data[fieldname + '_meta'] = data[fieldname]
-                if IBlobWrapper.providedBy(value):
-                    if max_size and value.get_size() > max_size:
-                        data[fieldname] = None
-                        del data[fieldname + '_meta']
-                        msg = 'File too big for ElasticSearch Indexing: {0}'
-                        logger.info(
-                            msg.format(
-                                obj.absolute_url(),
-                            ),
-                        )
-                        continue
-
-                    with value.getBlob().open() as fh:
-                        data[fieldname] = base64.b64encode(fh.read())
-                elif ITextField.providedBy(field):
-                    data[fieldname] = base64.b64encode(
-                        data[fieldname + '_meta']['data'].encode('utf8')
+                    del data[fieldname + '_meta']
+                    msg = 'File too big for ElasticSearch Indexing: {0}'
+                    logger.info(
+                        msg.format(
+                            obj.absolute_url(),
+                        ),
                     )
-            else:
-                field = getattr(obj, fieldname, None)
-                if field is None:
-                    data[fieldname] = None
                     continue
-                data[fieldname + '_meta'] = data[fieldname]
-                if IBlobby.providedBy(field):
-                    if max_size and field.getSize() > max_size:
-                        data[fieldname] = None
-                        del data[fieldname + '_meta']
-                        msg = 'File too big for ElasticSearch Indexing: {0}'
-                        logger.info(
-                            msg.format(
-                                obj.absolute_url(),
-                            ),
-                        )
-                        continue
-                    with field.open() as fh:
-                        data[fieldname] = base64.b64encode(fh.read())
-                elif IRichTextValue.providedBy(field):
-                    data[fieldname] = base64.b64encode(
-                        data[fieldname + '_meta']['data'].encode('utf8'),
-                    )
+                with field.open() as fh:
+                    data[fieldname] = base64.b64encode(fh.read())
+            elif IRichTextValue.providedBy(field):
+                data[fieldname] = base64.b64encode(
+                    data[fieldname + '_meta']['data'].encode('utf8'),
+                )
             if max_size and len(data[fieldname]) > max_size:
                 data[fieldname] = None
                 del data[fieldname + '_meta']

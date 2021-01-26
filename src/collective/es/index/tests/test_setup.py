@@ -16,6 +16,7 @@ class TestSetup(unittest.TestCase):
         """Custom shared utility setup for tests."""
         self.portal = self.layer['portal']
         self.installer = api.portal.get_tool('portal_quickinstaller')
+        self.installer.installProducts(['collective.es.index'])
         applyProfile(self.portal, 'collective.es.index:default')
 
     def test_product_installed(self):
@@ -37,6 +38,7 @@ class TestUninstall(unittest.TestCase):
         self.portal = self.layer['portal']
         self.installer = api.portal.get_tool('portal_quickinstaller')
         applyProfile(self.portal, 'collective.es.index:default')
+        self.installer.installProducts(['collective.es.index'])
         self.installer.uninstallProducts(['collective.es.index'])
 
     def test_product_uninstalled(self):

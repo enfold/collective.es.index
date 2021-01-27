@@ -4,7 +4,8 @@ from plone.app.robotframework.testing import REMOTE_LIBRARY_BUNDLE_FIXTURE
 from plone.app.testing import FunctionalTesting
 from plone.app.testing import IntegrationTesting
 from plone.app.testing import PloneSandboxLayer
-from plone.testing import z2
+from plone.testing.zope import installProduct
+from plone.testing.zope import WSGI_SERVER_FIXTURE
 
 class ProductConfiguration(object):
     max_blobsize = 0
@@ -29,7 +30,7 @@ class CollectiveEsIndexLayer(PloneSandboxLayer):
         import collective.es.index
         self.loadZCML(package=plone.restapi)
         self.loadZCML(package=collective.es.index)
-        z2.installProduct(app, 'collective.es.index')
+        installProduct(app, 'collective.es.index')
 
     def setUpPloneSite(self, portal):
         # provide an ES connection
@@ -70,7 +71,7 @@ COLLECTIVE_ES_INDEX_ACCEPTANCE_TESTING = FunctionalTesting(
     bases=(
         COLLECTIVE_ES_INDEX_FIXTURE,
         REMOTE_LIBRARY_BUNDLE_FIXTURE,
-        z2.ZSERVER_FIXTURE,
+        WSGI_SERVER_FIXTURE,
     ),
     name='CollectiveEsIndexLayer:AcceptanceTesting',
 )

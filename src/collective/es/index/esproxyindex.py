@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from AccessControl import ClassSecurityInfo
-from App.class_init import InitializeClass
+from AccessControl.class_init import InitializeClass
 from BTrees.IIBTree import IIBTree
 from BTrees.OOBTree import OOBTree
 from collective.es.index.utils import get_configuration
@@ -11,8 +11,8 @@ from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
 from OFS.SimpleItem import SimpleItem
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
-from Products.PluginIndexes.common.util import parseIndexRequest
 from Products.PluginIndexes.interfaces import ISortIndex
+from Products.ZCatalog.query import IndexQuery
 from zope.annotation.interfaces import IAnnotations
 from zope.component import queryUtility
 from zope.interface import implementer
@@ -157,7 +157,7 @@ class ElasticSearchProxyIndex(SimpleItem):
         logger.info(search_fields)
         if query_blocker.blocked:
             return
-        record = parseIndexRequest(request, self.id)
+        record = IndexQuery(request, self.id)
         if record.keys is None:
             return None
         es = get_query_client()

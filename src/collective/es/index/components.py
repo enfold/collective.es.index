@@ -13,7 +13,7 @@ class ElasticSearchIngressConfFactory(object):
     def _client_dict(self, value):
         if not value:
             value = [('127.0.0.1', '9200')]
-        return [dict(zip(['host', 'port'], el)) for el in value]
+        return [dict(list(zip(['host', 'port'], el))) for el in value]
 
     def prepare(self, *args, **kwargs):
         self.query = self._client_dict(self.section.query)

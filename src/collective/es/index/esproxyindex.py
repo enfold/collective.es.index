@@ -165,7 +165,9 @@ class ElasticSearchProxyIndex(SimpleItem):
         search = search.params(request_timeout=timeout)
         search = search.sort('rid', '_id')
         search = search.source(include='rid')
-        query_string = record.keys[0].decode('utf8')
+        query_string = record.keys[0]
+        if isinstance(query_string, bytes):
+            query_string = query_string.decode('utf8')
         logger.info(query_string)
         if '*' in query_string:
             query_string = query_string.replace('*', ' ')
@@ -195,7 +197,7 @@ class ElasticSearchProxyIndex(SimpleItem):
         batch_count = results_count / BATCH_SIZE
         if results_count % BATCH_SIZE != 0:
             batch_count = batch_count + 1
-        for i in xrange(batch_count):
+        for i in range(int(batch_count)):
             if last_seen is not None:
                 search = search.update_from_dict({'search_after': last_seen})
             try:

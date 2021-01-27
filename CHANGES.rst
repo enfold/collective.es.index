@@ -4,6 +4,8 @@ Changelog
 1.0a2 (unreleased)
 ------------------
 
+- Added suppot for Plone 5.2 and Python 3.5-3.8
+
 - Move to elasticsearch_dsl package for query generation
 
 - Add celery support (requires latest collective.celery) tested with celery>=4.2.0
